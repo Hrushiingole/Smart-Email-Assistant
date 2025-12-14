@@ -19,8 +19,8 @@ public class EmailGeneratorService {
 
     private final WebClient webClient;
 
-    public EmailGeneratorService(WebClient webClient) {
-        this.webClient = webClient;
+    public EmailGeneratorService(WebClient.Builder webClientBuilder) {
+        this.webClient = webClientBuilder.build();
     }
 
     public String generateEmailReply(EmailRequest emailRequest) {
@@ -30,18 +30,21 @@ public class EmailGeneratorService {
         Map<String,Object> requestBody=Map.of(
                 "contents",new Object[] {
                         Map.of("parts",new Object[]{
-                                Map.of("text",emailRequest.getEmailContent())
+                                Map.of("text",prompt)
                         })
                 }
         );
 
         //send request and get response
-        String response= webClient.post()
-                .uri(geminiApiUrl+geminiApiKey)
-                .header("Content-Type","application/json")
+        String response = webClient.post()
+                .uri(geminiApiUrl + "?key=" + geminiApiKey)
+                .header("Content-Type", "application/json")
+                .bodyValue(requestBody)
                 .retrieve()
                 .bodyToMono(String.class)
                 .block();
+
+
         //Extract Response and return
 
         return extractResponseContent(response);
@@ -67,7 +70,7 @@ public class EmailGeneratorService {
     private String buildPrompt(EmailRequest emailRequest) {
         StringBuilder prompt =new StringBuilder();
         prompt.append("Generate a professional email reply for the following email:");
-        if (emailRequest.getTone() != null && emailRequest.getEmailContent().isEmpty()) {
+        if (emailRequest.getTone() != null && !emailRequest.getEmailContent().isEmpty()) {
             prompt.append("Use a ").append(emailRequest.getTone()).append(" tone");
             //Use a casual tone
         }
