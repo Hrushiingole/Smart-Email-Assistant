@@ -1,0 +1,1 @@
+console.log("Email Writer Extension -Content writer Script");
